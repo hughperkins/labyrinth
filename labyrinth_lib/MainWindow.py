@@ -456,7 +456,6 @@ class LabyrinthWindow (gobject.GObject):
             self.foreground_widget.set_color(foreground_color)
 
     def main_area_focus_cb (self, arg, event, extended = False):
-        print('main_area_focus_cb() eextended', extended)
         if not extended:
             self.MainArea.grab_focus ()
         else:
