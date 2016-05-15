@@ -188,6 +188,8 @@ class MMapArea (gtk.DrawingArea):
         utils.selected_colors["fg"] = utils.gtk_to_cairo_color(style.fg[gtk.STATE_SELECTED])
         utils.selected_colors["fill"] = utils.gtk_to_cairo_color(style.base[gtk.STATE_SELECTED])
 
+        self.is_dirty = False
+
     def transform_coords(self, loc_x, loc_y):
         """Transform view co-ordinates (e.g. from a mouse event) to canvas
         co-ordinates.
@@ -258,6 +260,7 @@ class MMapArea (gtk.DrawingArea):
             t.move_by (move_x, move_y)
         self.undo.unblock ()
         self.invalidate ((old_coords[0], old_coords[1], new_coords[0], new_coords[1]))
+        self.is_dirty = True
 
     def button_release (self, widget, event):
         coords = self.transform_coords (event.get_coords()[0], event.get_coords()[1])
@@ -363,6 +366,7 @@ class MMapArea (gtk.DrawingArea):
             self.scale_fac = action.args[1]
             self.translation = action.args[3]
         self.invalidate ()
+        self.is_dirty = True
 
     def scroll (self, widget, event):
         """Mouse wheel events - zoom in/out"""
@@ -407,6 +411,7 @@ class MMapArea (gtk.DrawingArea):
             self.undo_deletion (delete, mode)
             self.undo_create_cb (create, mode)
         self.invalidate ()
+        self.is_dirty = True
 
     def key_press (self, widget, event):
         if not self.do_filter or not self.im_context.filter_keypress (event):
@@ -481,6 +486,7 @@ class MMapArea (gtk.DrawingArea):
             for t in self.selected:
                 t.move_by (coords[0] - self.move_origin_new[0], coords[1] - self.move_origin_new[1])
             self.move_origin_new = (coords[0], coords[1])
+            self.is_dirty = True
             self.invalidate ()
             return True
 
@@ -552,6 +558,7 @@ class MMapArea (gtk.DrawingArea):
 
     def title_changed_cb (self, widget, new_title):
         self.emit ("title_changed", new_title)
+        self.is_dirty = True
 
     def make_primary (self, thought):
         if self.primary:
@@ -685,11 +692,13 @@ class MMapArea (gtk.DrawingArea):
 
         self.undo.unblock ()
         self.invalidate ()
+        self.is_dirty = True
 
     def connect_link (self, link):
         link.connect ("select_link", self.select_link)
         link.connect ("update_view", self.update_view)
         link.connect ("popup_requested", self.create_popup_menu)
+        self.is_dirty = True
 
     def create_link (self, thought, thought_coords = None, child = None, child_coords = None, strength = 2):
         if child:
@@ -709,6 +718,7 @@ class MMapArea (gtk.DrawingArea):
                 del self.unending_link
             self.unending_link = Links.Link (self.save, parent = thought, start_coords = thought_coords,
                     end_coords = child_coords, strength = strength)
+        self.is_dirty = True
 
     def set_mouse_cursor_cb (self, thought, cursor_type):
         if not self.moving:
@@ -941,6 +951,7 @@ class MMapArea (gtk.DrawingArea):
         thought.connect ("grab_focus", self.regain_focus_cb)
         thought.connect ("update-attrs", self.update_attr_cb)
         self.thoughts.append (thought)
+        self.is_dirty = True
         return thought
 
     def regain_focus_cb (self, thought, ext):
@@ -975,6 +986,7 @@ class MMapArea (gtk.DrawingArea):
         for l in rem_links:
             self.delete_link (l)
         self.undo.add_undo (action)
+        self.is_dirty = True
         return True
 
     def undo_deletion (self, action, mode):
@@ -1002,6 +1014,7 @@ class MMapArea (gtk.DrawingArea):
                 self.delete_link (l)
         self.emit ("set_focus", None, False)
         self.undo.unblock ()
+        self.is_dirty = True
         self.invalidate ()
 
     def delete_selected_elements (self):
@@ -1027,12 +1040,14 @@ class MMapArea (gtk.DrawingArea):
         self.undo.unblock ()
         self.undo.add_undo (action)
         self.invalidate ()
+        self.is_dirty = True
 
     def delete_link (self, link):
         if link.element in self.element.childNodes:
             self.element.removeChild (link.element)
         #link.element.unlink ()
         self.links.remove (link)
+        self.is_dirty = True
 
     def popup_menu_key (self, event):
         print "Popup Menu Key"
@@ -1209,6 +1224,7 @@ class MMapArea (gtk.DrawingArea):
                 print "Warning: Unknown element type.  Ignoring: "+node.nodeName
 
         self.finish_loading ()
+        self.is_dirty = False
 
     def finish_loading (self):
         # Possible TODO: This all assumes we've been given a proper,

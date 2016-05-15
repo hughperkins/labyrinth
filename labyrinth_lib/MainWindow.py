@@ -196,7 +196,6 @@ class LabyrinthWindow (gobject.GObject):
         self.act.set_current_value (self.mode)
 
         self.undo.unblock ()
-        self.start_timer ()
 
     def show(self):
         self.main_window.show_all()
@@ -457,6 +456,7 @@ class LabyrinthWindow (gobject.GObject):
             self.foreground_widget.set_color(foreground_color)
 
     def main_area_focus_cb (self, arg, event, extended = False):
+        print('main_area_focus_cb() eextended', extended)
         if not extended:
             self.MainArea.grab_focus ()
         else:
@@ -494,9 +494,13 @@ class LabyrinthWindow (gobject.GObject):
         self.MainArea.delete_selected_elements ()
 
     def close_window_cb (self, event):
-        self.SaveTimer.cancel = True
+        if self.MainArea.is_dirty:
+           chooser = gtk.MessageDialog(parent=self.main_window, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_YES_NO)
+           chooser.set_markup("Save?")
+           response = chooser.run()
+           if response == gtk.RESPONSE_YES:
+             self.MainArea.save_thyself ()
         self.main_window.hide ()
-#        self.MainArea.save_thyself ()
         del (self)
         gtk.main_quit ()
 
@@ -754,7 +758,3 @@ class LabyrinthWindow (gobject.GObject):
         else:
             self.MainArea.paste_clipboard (clip)
 
-    def start_timer (self):
-        self.SaveTimer = PeriodicSaveThread.PeriodicSaveThread(self.MainArea)
-        self.SaveTimer.setDaemon( True)
-        self.SaveTimer.start()
