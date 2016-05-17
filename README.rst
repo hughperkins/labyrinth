@@ -1,4 +1,5 @@
-# How does this compare to other forks of labyrinth?
+How does this compare to other forks of labyrinth?
+===============================
 
 * Uses a desktop load/save paradigm:
   * when you open labyrinth, it will directly open the mind map editor window, with a new mind map
@@ -10,8 +11,7 @@
     * and any calls to 'save' or `ctrl-s` will save to this filepath
   * (cf the original fork is more like a mobile app, with its own internal database of mind maps, which you can
   export if you want)
-* files are saved as xml files, rather than tars.  I'm not sure if this is good or bad, so feel free to raise
-an issue for this
+* files are saved as xml files, rather than tars.  I'm not sure if this is good or bad, so feel free to raise an issue for this
   * good: better for use with `git`
   * bad: if you insert any images, I suppose they'll be lost???
 
